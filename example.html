@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Form Validator for AngularJS</title>
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootswatch/2.3.1/spruce/bootstrap.min.css">
+</head>
+<body ng-app="ExampleApp">
+
+  <div class="container" ng-controller="MainCtrl">
+    
+    <div class="row">
+      <h1>Form Validator Example</h1>
+    </div>
+    
+    <hr>
+  
+    <form>
+      <p><input type="text" kk-required="required" /></p>
+    </form>
+    
+    <hr>
+
+  </div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.6/angular.min.js"></script>
+  <script src="angular-validator.js"></script>
+  <script>
+    angular.module('ExampleApp', ['kk.angular-validator']).
+      controller('MainCtrl', function ($scope) {
+        
+      });
+  </script>
+</body>
+</html>
