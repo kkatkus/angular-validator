@@ -17,7 +17,7 @@ bower install angular-validator
 <form>
   <p><label>Required field</label><input type="text" kk-required="Field is required" /></p>
   <p><button type="submit">submit</button></p>
-</div>
+</form>
 ```
 
 ## Example
