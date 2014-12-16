@@ -21,7 +21,7 @@ bower install angular-validator
 ```
 
 ## Example
-See [`example.html`](http://htmlpreview.github.io/?https://github.com/kkatkus/angular-validator/blob/master/example.html).
+See [`example.html`](http://htmlpreview.github.io/?https://github.com/kkatkus/angular-validator/blob/master/example/example.html).
 
 ## License
 MIT
