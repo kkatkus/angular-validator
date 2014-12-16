@@ -10,10 +10,11 @@
   <div class="container" ng-controller="MainCtrl">
     
     <h1>Form Validator Example</h1>
-    
+    <br />
     <form class="form-horizontal">
       
       <div class="panel panel-default">
+      
         <div class="form-group">
           <label class="col-sm-3">Required</label>
           <div class="col-sm-9">
@@ -26,6 +27,21 @@
             <input type="checkbox" kk-vld-required="Field is required" value="1" />
           </div>
         </div>
+        
+        <div class="form-group">
+          <label class="col-sm-3">Min Length</label>
+          <div class="col-sm-9">
+            <input type="text" kk-vld-length-min="Min length 5" kk-vld-length="5" />
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="col-sm-3">Max Length</label>
+          <div class="col-sm-9">
+            <input type="text" kk-vld-length-max="Max length 5" kk-vld-length="5" />
+          </div>
+        </div>
+        
       </div>
     
     </form>
