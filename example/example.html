@@ -9,12 +9,8 @@
 
   <div class="container" ng-controller="MainCtrl">
     
-    <div class="row">
-      <h1>Form Validator Example</h1>
-    </div>
+    <h1>Form Validator Example</h1>
     
-    <hr>
-  
     <form class="form-horizontal">
       
       <div class="panel panel-default">
@@ -22,14 +18,14 @@
           <label class="col-sm-3">Required</label>
           <div class="col-sm-9">
             <input type="text" kk-vld-required="Field is required" />
+            <select kk-vld-required="Field is required"></select>
+            <input type="checkbox" kk-vld-required="Field is required" value="1" />
           </div>
         </div>
       </div>
     
     </form>
     
-    <hr>
-
   </div>
 
   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.6/angular.min.js"></script>
