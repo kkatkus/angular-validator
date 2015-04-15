@@ -1,0 +1,55 @@
+body {
+    color: #58666e;
+    font-family: "Source Sans Pro","Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    background-color: transparent;
+}
+
+label {
+    line-height: 36px;
+    font-size: 12px;
+    font-weight: normal;
+    text-align: right;
+}
+
+.alert {
+    margin-right: 0;
+    padding: 10px;
+    font-size: 13px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+    border: 1px solid transparent;
+    border-radius: 4px;
+
+}
+.alert-danger {
+    color: #a94442;
+    border-color: #ebccd1;
+    background-image: none;
+}
+.alert-success {
+    background-image: none;
+}
+.panel-default
+.panel-heading {
+    font-size: 16px;
+    background: #f6f8f8 none;
+}
+.form-control {
+    margin-bottom: 10px;
+    background: #fff none;
+    border: 1px solid #cfdadd;
+    border-radius: 3px;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+    -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
+    -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+    transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+}
+.form-control,
+.form-control:focus {
+    -webkit-box-shadow: none;
+    box-shadow: none
+}
+.form-control:focus {
+    border-color: #23b7e5
+}
