@@ -2,70 +2,133 @@
 <html>
 <head>
   <title>Form Validator for AngularJS</title>
-  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
-  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
-  <link rel="stylesheet" href="style.css">
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
+
+  <link rel="stylesheet" href="example.css">
+  <link rel="stylesheet" href="angular-validator.css">
+
 </head>
+
 <body ng-app="ExampleApp">
 
   <div class="container" ng-controller="MainCtrl">
-    
+
     <h1>Form Validator Example</h1>
-    <br />
-    <form class="form-horizontal col-sm-6">
-      
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <strong>Basic constraints</strong>
-        </div>
-        <div class="panel-body">
-          <div class="form-group">
-            <label class="col-sm-3">Required</label>
-            <div class="col-sm-9">
-              <input class="form-control" type="text" kk-vld-required="Field is required" />
-              <select class="form-control" kk-vld-required="Field is required">
-                <option value=""></option>
-                <option value="1">Value 1</option>
-                <option value="2">Value 2</option>
-              </select>
-              <input class="form-control" type="checkbox" kk-vld-required="Field is required" value="1" />
+
+    <div class="row">
+
+      <div class="col-sm-6">
+        <div ng-show="alert" class="alert" ng-class="'alert-' + alert.type" role="{{alert.type}}">{{alert.message}}</div>
+
+        <form name="vldFrm" class="form-horizontal" kk-vld-submit="vldSubmit()" kk-vld-submit-success="vldSuccess()" kk-vld-submit-error="vldError()">
+
+          <div class="panel panel-default">
+            <div class="panel-heading">Basic constraints</div>
+            <div class="panel-body">
+
+              <div class="form-group">
+                <label class="col-sm-3">Required</label>
+                <div class="col-sm-4">
+                  <input class="form-control" type="text" kk-vld-required="Field is required" ng-model="data.required.input" placeholder="required field" />
+                </div>
+                <div class="col-sm-4">
+                  <select class="form-control" kk-vld-required="Field is required" ng-model="data.required.select">
+                    <option value="">Please choose</option>
+                    <option value="1">Value 1</option>
+                    <option value="2">Value 2</option>
+                  </select>
+                </div>
+
+              </div>
+
+              <div class="form-group">
+
+                <div class="col-sm-offset-3 col-sm-9">
+                  <label><input type="checkbox" kk-vld-required="Field is required" value="1" ng-model="data.required.checkbox" />Agree to the Policy</label>
+                </div>
+
+              </div>
+
+              <div class="form-group">
+
+                <div class="col-sm-offset-3 col-sm-9">
+                  <label><input type="radio" name="yesNo" kk-vld-required="Field is required" value="yes" ng-model="data.required.radio" />Yes</label>
+                  <label><input type="radio" name="yesNo" kk-vld-required="Field is required" value="no" ng-model="data.required.radio" />No</label>
+                </div>
+
+              </div>
+
+
+              <div class="form-group">
+                <label class="col-sm-3">Min, Max Length</label>
+                <div class="col-sm-4">
+                  <input class="form-control" type="text" kk-vld-length-min="Min length 5" kk-vld-length="5" ng-model="data.length.min" placeholder="min length = 5" />
+                </div>
+                <div class="col-sm-4">
+                  <input class="form-control" type="text" kk-vld-length-max="Max length 5" kk-vld-length="5" ng-model="data.length.max" placeholder="max length = 5" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-3">Range Length</label>
+                <div class="col-sm-9">
+                  <input class="form-control" type="text" kk-vld-length-range="Min length 5, Max length 10" kk-vld-="5" ng-model="data.length.range" placeholder="minlength = 5 maxlength = 10" />
+                </div>
+              </div>
             </div>
-          </div>
-        
-          <div class="form-group">
-            <label class="col-sm-3">Min Length</label>
-            <div class="col-sm-9">
-              <input class="form-control" type="text" kk-vld-length-min="Min length 5" kk-vld-length="5" />
+
+            <div class="panel-footer">
+              <div class="form-actions">
+                <button type="submit" class="btn btn-success">Submit</button>
+                <button type="button" class="btn btn-default" ng-click="reset()">Reset</button>
+              </div>
             </div>
+
           </div>
-          
-          <div class="form-group">
-            <label class="col-sm-3">Max Length</label>
-            <div class="col-sm-9">
-              <input class="form-control" type="text" kk-vld-length-max="Max length 5" kk-vld-length="5" />
-            </div>
-          </div>
-        </div>
-        
-        <div class="panel-footer">
-          <div class="form-actions">
-            <button type="submit" class="btn btn-success">Submit</button>
-          </div>
-        </div>
-        
+          required: {{data.required | json}}<br />
+          length: {{data.length | json}}<br />
+        </form>
       </div>
-    
-    </form>
-    
+
+      <div class="col-sm-6">
+
+        <form class="form-horizontal" kk-vld-submit="vldSubmit2()" kk-vld-submit-success="vldSuccess2()" kk-vld-submit-error="vldError2()">
+
+          <div ng-show="alert2" class="alert" ng-class="'alert-' + alert2.type" role="{{alert2.type}}">{{alert2.message}}</div>
+
+          <div class="panel panel-default">
+            <div class="panel-heading">Multiple Forms</div>
+            <div class="panel-body">
+
+              <div class="form-group">
+                <label class="col-sm-3">Required</label>
+                <div class="col-sm-9">
+                  <input class="form-control" type="text" kk-vld-required="Field is required" ng-model="data2.required.input" placeholder="required field" />
+
+                </div>
+              </div>
+            </div>
+            <div class="panel-footer">
+              <div class="form-actions">
+                <button type="submit" class="btn btn-success">Submit</button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+    </div>
+
   </div>
 
-  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.6/angular.min.js"></script>
-  <script src="../angular-validator.js"></script>
-  <script>
-    angular.module('ExampleApp', ['kk.angular-validator']).
-      controller('MainCtrl', function ($scope) {
-        
-      });
-  </script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.7/angular.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+  <script src="angular-validator.js"></script>
+  <script src="example.js"></script>
+
 </body>
 </html>
