@@ -1,0 +1,58 @@
+section.ng-dirty.ng-invalid,
+.kk-submitted section.ng-invalid,
+input.ng-dirty.ng-invalid,
+.kk-submitted input.ng-invalid,
+select.ng-dirty.ng-invalid,
+.kk-submitted select.ng-invalid,
+textarea.ng-dirty.ng-invalid,
+.kk-submitted textarea.ng-invalid {
+    border: 1px solid red !important;
+}
+input[type="checkbox"].ng-dirty.ng-invalid,
+.kk-submitted input[type="checkbox"].ng-invalid {
+    border: none;
+    box-shadow: 0 0 0 1px red !important;
+}
+input[type="radio"].ng-dirty.ng-invalid,
+.kk-submitted input[type="radio"].ng-invalid {
+    border: none;
+    box-shadow: 0 0 0 1px red !important;
+}
+.kk-vld-popover {
+	display: table;
+	left: 15px !important;
+	max-width: none;
+    background: red;
+    border: 1px solid red;
+}
+.kk-vld-popover .popover-content ul {
+	margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.kk-vld-popover .popover-content li {
+    margin: 0;
+    padding: 0;
+    font-size: 13px;
+    color: white;
+    line-height: 16px;
+    white-space: nowrap;
+    width: auto;
+}
+.kk-vld-popover .popover-content li:before {
+    content: '';
+    margin: 0;
+}
+.kk-vld-popover > .arrow {
+    bottom: -11px !important;
+    left: 20px !important;
+    margin-left: -11px !important;
+    border-top-color: red !important;
+}
+.kk-vld-popover > .arrow:after {
+    border-top-color: red !important;
+}
+.kk-vld-popover ul {
+    margin: 0 0 0 10px;
+    padding: 0;
+}
