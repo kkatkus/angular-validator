@@ -1,34 +1,39 @@
-angular.module('ExampleApp', ['kk.angular-validator'])
+angular.module('ExampleApp', ['kk.validator'])
 
-    .controller('MainCtrl', function ($scope, kkValidatorService) {
+    .controller('MainCtrl', function ($scope, kkVldService) {
 
-        var onVldSubmit = function (data) {
-                console.log('onVldSubmit', data);
+        var onVldSubmit = function () {
+
+                console.log('onVldSubmit');
+
                 $scope.alert = undefined;
             },
-            onVldSuccess = function (data) {
-                console.log('onVldSuccess', data);
-                $scope.alert = {
-                    type: 'success',
-                    message: 'Form is Valid.'
-                };
-            },
-            onVldError = function (data) {
 
-                var msg = kkValidatorService.getErrors($scope.vldFrm);
-                console.log($scope.vldFrm);
+            onVldError = function () {
 
-                console.log('onVldError', data);
+                console.log('onVldError');
+
+                $scope.errors = kkVldService.getErrors($scope.kkValidatorForm.$name);
+
                 $scope.alert = {
                     type: 'danger',
                     message: 'Form is Invalid.'
                 };
             },
 
-            onReset = function () {
-                kkValidatorService.resetForm($scope.vldFrm);
-                $scope.alert = undefined;
-                $scope.data = {};
+            onVldSuccess = function () {
+
+                console.log('onVldSuccess');
+
+                $scope.alert = {
+                    type: 'success',
+                    message: 'Form is Valid.'
+                };
+            },
+
+            onReset = function (form) {
+                kkVldService.resetForm(form);
+                onInitialize();
             },
 
             onVldSubmit2 = function (data) {
@@ -52,7 +57,35 @@ angular.module('ExampleApp', ['kk.angular-validator'])
 
             onInitialize = function () {
                 $scope.alert = undefined;
-                $scope.data = {};
+                $scope.data = {
+                    required: {
+                        input: undefined,
+                        select: undefined,
+                        checkbox: undefined,
+                        radio: undefined
+                    },
+                    number: 'z',
+                    ranges: {
+                        min: '1',
+                        max: '123456',
+                        range: '1234'
+                    }
+                };
+                $scope.data2 = {
+                    required: {
+                        input: undefined
+                    }
+                };
+
+                $scope.data2 = {
+
+                };
+
+                $scope.dynamicForm = [
+                    { label: "First Name", name: "firstName" },
+                    { label: "Last Name", name: "lastName" }
+                ]
+
             };
 
         $scope.vldSubmit = onVldSubmit;

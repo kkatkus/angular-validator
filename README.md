@@ -10,7 +10,7 @@ bower install angular-validator
 ```
 
 ## Usage
-1. Include the `angular-validator.js` script provided by this component into your app.
+1. Include the `kk-validator.js` script provided by this component into your app.
 2. Add `kk.angular-validator` as a module dependency to your app.
 
 ```html

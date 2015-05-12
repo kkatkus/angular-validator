@@ -1,0 +1,90 @@
+.ng-submitted input:not([type=radio]):not([type=checkbox]).ng-invalid,
+.ng-submitted select.ng-invalid {
+    border: 1px solid red;
+}
+
+section.ng-dirty.ng-invalid,
+.kk-submitted section.ng-invalid,
+input.ng-dirty.ng-invalid,
+.kk-submitted input.ng-invalid,
+select.ng-dirty.ng-invalid,
+.kk-submitted select.ng-invalid,
+textarea.ng-dirty.ng-invalid,
+.kk-submitted textarea.ng-invalid {
+    border: 1px solid red !important;
+}
+input[type="checkbox"].ng-dirty.ng-invalid,
+.kk-submitted input[type="checkbox"].ng-invalid {
+    border: none;
+    box-shadow: 0 0 0 1px red !important;
+}
+input[type="radio"].ng-dirty.ng-invalid,
+.kk-submitted input[type="radio"].ng-invalid {
+    border: none;
+    box-shadow: 0 0 0 1px red !important;
+}
+
+.ng-submitted label.kk-vld-error {
+    color: red;
+}
+
+.ng-submitted input:not([type="radio"]):not([type="checkbox"]).kk-vld-error,
+.ng-submitted select.kk-vld-error,
+.ng-submitted section.kk-vld-error {
+    border: 1px solid red;
+}
+.kk-vld-parent-error {
+    border: 1px solid red;
+}
+
+.kk-vld-popover {
+    opacity: 0;
+    position: absolute;
+    z-index: 1010;
+    display: block;
+    max-width: 276px;
+    margin: 0 0 0 0;
+    padding: 1px;
+    text-align: left;
+    background-color: red;
+    background-clip: padding-box;
+    border-radius: 4px;
+    -webkit-box-shadow: 0 1px 1px darkred;
+    box-shadow: 0 1px 1px darkred;
+    white-space: normal;
+    -webkit-transition: opacity .5s; /* Safari 3.1 to 6.0 */
+    transition: opacity .5s;
+}
+.ng-submitted .kk-vld-popover {
+    opacity: 1 !important;
+}
+.kk-vld-popover-content {
+    padding: 6px 10px;
+    color: white;
+    font-size: 12px;
+    line-height: 18px;
+}
+
+.kk-vld-popover-arrow,
+.kk-vld-popover-arrow:after {
+    position: absolute;
+    display: block;
+    width: 0;
+    height: 0;
+    border: solid transparent;
+}
+.kk-vld-popover-arrow {
+    left: 20px;
+    bottom: -22px;
+    margin-left: -11px;
+    border-width: 11px;
+    border-top-color: darkred;
+}
+.kk-vld-popover-arrow:after {
+    border-width: 10px;
+    content: " ";
+    bottom: 1px;
+    margin-left: -10px;
+    border-bottom-width: 0;
+    border-top-color: red
+}

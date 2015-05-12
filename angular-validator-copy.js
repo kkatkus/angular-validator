@@ -6,9 +6,9 @@
 
 'use strict';
 
-angular.module('kk.angular-validator', [])
+angular.module('kk.validator', [])
 	
-	.factory("kkValidatorUtils", [
+	.factory("kkVldUtils", [
 
 		function () {
 
@@ -35,7 +35,7 @@ angular.module('kk.angular-validator', [])
 		            }
 
 		            return result;
-		        };
+                };
 
             // Publish delegate instance/object with desired API
 			return {
@@ -44,7 +44,7 @@ angular.module('kk.angular-validator', [])
 		}
 	])
 
-	.service("kkValidatorPopover", [ "kkValidatorUtils", function (kkValidatorUtils) {
+	.service("kkVldPopover", [ "kkVldUtils", function (kkVldUtils) {
 
         var /**
              * @messages stores validation messages
@@ -52,25 +52,33 @@ angular.module('kk.angular-validator', [])
             messages = [],
 
             /**
-             * Util to get form name
+             * Util to get form name from element
              * @returns string
              */
-            getFormName = function (elem) {
+            onGetFormNameFromElement = function (elem) {
                 return elem.controller('form').$name;
+            },
+
+            /**
+             * Util to get form name form object of form name
+             * @returns string
+             */
+            onGetFormName = function (frm) {
+                return typeof frm === 'object' ? frm.$name : frm;
             },
 
             /**
              * Util to get form id or create random and return
              * @returns string
              */
-            getId = function (elem) {
-                elem[0].id = elem[0].id || 'id-' + kkValidatorUtils.randomString(6, true, false, true);
+            onGetElementId = function (elem) {
+                elem[0].id = elem[0].id || 'id-' + kkVldUtils.randomString(6, true, false, true);
                 var id = elem[0].id || elem[0].name || elem.scope().$id;
-                if (!messages[getFormName(elem)]) {
-                    messages[getFormName(elem)] = {};
+                if (!messages[onGetFormNameFromElement(elem)]) {
+                    messages[onGetFormNameFromElement(elem)] = {};
                 }
-                if (!messages[getFormName(elem)][id]) {
-                    messages[getFormName(elem)][id] = [];
+                if (!messages[onGetFormNameFromElement(elem)][id]) {
+                    messages[onGetFormNameFromElement(elem)][id] = [];
                 }
                 return id;
             },
@@ -80,10 +88,10 @@ angular.module('kk.angular-validator', [])
              * @returns boolean
              */
             onCreate = function (elem, hidden) {
-                var id = getId(elem);
+                var id = onGetElementId(elem);
                 elem.popover({
                     html: true,
-                    content: '<ul><li>' + _.pluck(messages[getFormName(elem)][id], "msg").join("</li><li>") + '</li></ul>',
+                    content: '<ul><li>' + _.pluck(messages[onGetFormNameFromElement(elem)][id], "msg").join("</li><li>") + '</li></ul>',
                     placement: 'top',
                     trigger: 'hover',
                     template:
@@ -104,12 +112,12 @@ angular.module('kk.angular-validator', [])
              * @returns boolean
              */
             onShow = function (name, elem, msg, hidden) {
-                var id = getId(elem),
-                    i = _.where(messages[getFormName(elem)][id], { id: name });
+                var id = onGetElementId(elem),
+                    i = _.where(messages[onGetFormNameFromElement(elem)][id], { id: name });
 
                 msg = msg || "Invalid field";
                 if (i.length === 0) {
-                    messages[getFormName(elem)][id].push({ id: name, msg: msg });
+                    messages[onGetFormNameFromElement(elem)][id].push({ id: name, msg: msg });
                     onCreate(elem, hidden);
                 }
                 return true;
@@ -120,16 +128,16 @@ angular.module('kk.angular-validator', [])
              * @returns boolean
              */
             onDestroy = function (name, elem) {
-                var id = getId(elem),
-                    i = _.where(messages[getFormName(elem)][id], { id: name });
+                var id = onGetElementId(elem),
+                    i = _.where(messages[onGetFormNameFromElement(elem)][id], { id: name });
                 if (!name) {
                     elem.popover('destroy');
-                    messages[getFormName(elem)][id] = [];
+                    messages[onGetFormNameFromElement(elem)][id] = [];
                 }
                 if (i.length !== 0) {
                     elem.popover('destroy');
-                    _.remove(messages[getFormName(elem)][id], function (obj) { return obj.id === name; });
-                    if (messages[getFormName(elem)][id].length !== 0) {
+                    _.remove(messages[onGetFormNameFromElement(elem)][id], function (obj) { return obj.id === name; });
+                    if (messages[onGetFormNameFromElement(elem)][id].length !== 0) {
                         onCreate(elem);
                     }
                 }
@@ -140,7 +148,7 @@ angular.module('kk.angular-validator', [])
              */
             onClear = function (frm) {
                 if (frm) {
-                    messages[frm] = [];
+                    messages[onGetFormName(frm)] = [];
                 } else {
                     messages = [];
                 }
@@ -151,11 +159,12 @@ angular.module('kk.angular-validator', [])
              * @returns array
              */
             onGetErrors = function (frm) {
-                return frm ? messages[frm] : messages;
+                return frm ? messages[onGetFormName(frm)] : messages;
             };
 
         // Publish delegate instance/object with desired API
         return {
+            getElementId: onGetElementId,
             create: onCreate,
             show: onShow,
             destroy: onDestroy,
@@ -164,7 +173,7 @@ angular.module('kk.angular-validator', [])
         };
     }])
 
-    .service("kkValidatorService", [ "$q", "$timeout", "kkValidatorPopover", "kkValidatorUtils", function ($q, $timeout, kkValidatorPopover, kkValidatorUtils) {
+    .service("kkVldService", [ "$q", "$timeout", "kkVldPopover", "kkVldUtils", function ($q, $timeout, kkVldPopover, kkVldUtils) {
 
         var /**
              * @submittingForm form witch is in submit process
@@ -175,6 +184,59 @@ angular.module('kk.angular-validator', [])
              * @serverErrorName category name of server error
              */
             serverErrorName = 'kkVldServerError',
+
+            /**
+             * @radioButtons
+             */
+            radioButtons = {},
+
+            onIsFormSubmitted = function (elem) {
+                var form = elem.controller('form');
+                return form.$submitted === true;
+            },
+
+            /**
+             * Get Form Elements
+             * @form form object to get elements from
+             * @type optional param to filter elements by type
+             * @returns array
+             */
+            onGetFormElements = function (form, type) {
+
+                angular.forEach(form, function (value, key) {
+                    if (angular.isDefined(value) && value.hasOwnProperty('$modelValue')) {
+                        //console.log('field', key);
+                    }
+                });
+            },
+
+            onPushRadioElement = function (name, message, elem, ctrl) {
+                var formName = elem.controller('form').$name,
+                    groupName = elem[0].name;
+
+                if (!radioButtons[formName]) {
+                    radioButtons[formName] = {};
+                }
+                if (!radioButtons[formName][groupName]) {
+                    radioButtons[formName][groupName] = {};
+                }
+                radioButtons[formName][groupName][kkVldPopover.getElementId(elem)] = {
+                    name: name,
+                    message: message,
+                    elem: elem,
+                    ctrl: ctrl
+                };
+            },
+
+            onEnableRadioElements = function (elem) {
+                var form = elem.controller('form');
+                angular.forEach(radioButtons[form.$name][elem[0].name], function(obj) {
+                    onSetValid(obj.name, obj.message, obj.elem, obj.ctrl);
+
+                    console.log(obj);
+
+                });
+            },
 
             /**
              * Mark a form in submit status
@@ -201,10 +263,10 @@ angular.module('kk.angular-validator', [])
                     form.$setPristine();
                     var formElem = angular.element(document.getElementsByName(form.$name));
                     if (formElem) {
-                        formElem.removeClass('kk-submitted');
+                        formElem.removeClass('kk-vld-submitted');
                     }
-                    var messages = kkValidatorPopover.getErrors(form.$name);
-                    kkValidatorPopover.clear(form.$name);
+                    var messages = kkVldPopover.getErrors(form.$name);
+                    kkVldPopover.clear(form.$name);
                     for (id in messages) {
                         elem = angular.element(document.getElementById(id));
                         elem.popover('destroy');
@@ -223,10 +285,10 @@ angular.module('kk.angular-validator', [])
 
                 if (angular.isDefined(submittingForm) && angular.isDefined(submittingForm[name]) && elem.length > 0) {
                     submittingForm[name].$setValidity(serverErrorName, false);
-                    kkValidatorPopover.show(serverErrorName, elem, message, true);
+                    kkVldPopover.show(serverErrorName, elem, message, true);
                     elem.bind('keydown keypress', function () {
                         if (isPopup) {
-                            kkValidatorPopover.destroy(serverErrorName, elem, message);
+                            kkVldPopover.destroy(serverErrorName, elem, message);
                             submittingForm[name].$setValidity(serverErrorName, true);
                             isPopup = false;
                         }
@@ -243,7 +305,7 @@ angular.module('kk.angular-validator', [])
                 var elem = angular.element(document.getElementsByName(name));
 
                 if (elem.length > 0) {
-                    kkValidatorPopover.destroy(serverErrorName, elem, message);
+                    kkVldPopover.destroy(serverErrorName, elem, message);
                 }
             },
 
@@ -254,7 +316,7 @@ angular.module('kk.angular-validator', [])
             onClearByName = function (name) {
                 var domElem = document.getElementsByName(name);
                 if (domElem.length > 0) {
-                    kkValidatorPopover.destroy(undefined, angular.element(domElem));
+                    kkVldPopover.destroy(undefined, angular.element(domElem));
                 }
             },
 
@@ -266,7 +328,7 @@ angular.module('kk.angular-validator', [])
                 // set invalid
                 ctrl.$setValidity(name, false);
                 // create popover
-                kkValidatorPopover.show(name, elem, message, true);
+                kkVldPopover.show(name, elem, message, true);
             },
 
             /**
@@ -277,7 +339,7 @@ angular.module('kk.angular-validator', [])
                 // set valid
                 ctrl.$setValidity(name, true);
                 // destroy popover
-                kkValidatorPopover.destroy(name, elem, message);
+                kkVldPopover.destroy(name, elem, message);
             },
 
             /**
@@ -288,7 +350,7 @@ angular.module('kk.angular-validator', [])
                 var form = elem.controller('form');
                 elem.bind('focus', function () {
                     if ((ctrl.$dirty || form.$submitted) && ctrl.$error[name]) {
-                        kkValidatorPopover.show(name, elem, message, false);
+                        kkVldPopover.show(name, elem, message, false);
                     }
                 });
             },
@@ -299,25 +361,20 @@ angular.module('kk.angular-validator', [])
              */
             onInitialize = function (name, defaultMessage, elem, attr, ctrl, validationFunc, isCustom) {
 
-                kkValidatorPopover.clear();
+                kkVldPopover.clear();
 
                 var message = attr[name] || defaultMessage,
                     promise;
 
                 if (!attr.name) {
-                    attr.name = 'kkFldName' + kkValidatorUtils.randomString(6, true, false, true);
+                    attr.name = 'kkVldFld-' + kkVldUtils.randomString(6, true, false, true);
                 }
 
                 onShowPopoverOnFocus(name, message, elem, ctrl);
 
-                // add a parser that will process each time the value is
-                // parsed into the model when the user updates it.
+                // add a parser that will process each time the value is modified by user.
                 ctrl.$parsers.unshift(function (value) {
-                    //console.log('$parsers', elem, value);
-                    // set it to true here, otherwise it will not
-                    // clear out when previous validators fail.
-
-                    promise = isCustom ? validationFunc({value: value}) : validationFunc(value, true);
+                    promise = isCustom ? validationFunc({value: value}) : validationFunc(value, false);
                     promise.then(
                         function (response) {
                             // valid
@@ -334,19 +391,19 @@ angular.module('kk.angular-validator', [])
                     return value;
                 });
 
-                // add a formatter that will process each time the value
-                // is updated on the DOM element.
+                // add a formatter that will process each time the value is modified from the code.
                 ctrl.$formatters.unshift(function (value) {
-
                     promise = isCustom ? validationFunc({value: value}) : validationFunc(value, true);
                     promise.then(
-                        function () {
+                        function (response) {
                             // valid
-                            ctrl.$setValidity(name, true);
+                            onSetValid(name, response || message, elem, ctrl);
+                            return value;
                         },
-                        function () {
+                        function (response) {
                             // invalid
-                            ctrl.$setValidity(name, false);
+                            onSetInValid(name, response || message, elem, ctrl);
+                            return undefined;
                         }
                     );
 
@@ -355,13 +412,13 @@ angular.module('kk.angular-validator', [])
                 });
             },
 
-            onGetErrorMessages = function(frm) {
-
-            },
-
             onGetErrors = function (frm) {
 
-                return kkValidatorPopover.getErrors(frm);
+                return kkVldPopover.getErrors(frm);
+            },
+
+            onGetErrorMessages = function(frm) {
+
             },
 
             onValidateForm = function (form) {
@@ -381,6 +438,16 @@ angular.module('kk.angular-validator', [])
                     if (form.$name) {
                         angular.element(document.getElementsByName(form.$name)).addClass('kk-submitted');
                     }
+
+                    angular.forEach(form, function(field, key) {
+                        if (angular.isDefined(field) && field.hasOwnProperty('$modelValue')) {
+                            field.$$runValidators(field.$modelValue, field.$modelValue, function (result) {
+                                console.log(result);
+                            })
+
+                            field.$validate();
+                        }
+                    });
 
                     for (field in form) {
                         if (form.hasOwnProperty(field)) {
@@ -415,7 +482,10 @@ angular.module('kk.angular-validator', [])
         // Publish Public Functions
         return {
 
-            initialize: onInitialize,
+            isFormSubmitted: onIsFormSubmitted,
+            getFormElements: onGetFormElements,
+            pushRadioElement: onPushRadioElement,
+            enableRadioElements: onEnableRadioElements,
             resetForm: onResetForm,
             setValid: onSetValid,
             setValidByName: onSetValidByName,
@@ -424,29 +494,23 @@ angular.module('kk.angular-validator', [])
             clearByName: onClearByName,
             setSubmittingForm: onSetSubmittingForm,
             getErrors: onGetErrors,
-            validateForm: onValidateForm
+            validateForm: onValidateForm,
+            initialize: onInitialize
         };
     }])
 
-    .directive("kkVldSubmit", [ "$parse", "$timeout", "kkValidatorUtils", "kkValidatorService", function ($parse, $timeout, kkValidatorUtils, kkValidatorService) {
+    .directive("kkVldSubmit", [ "$parse", "$timeout", "kkVldUtils", "kkVldService", function ($parse, $timeout, kkVldUtils, kkVldService) {
         // Return configured, directive instance
         return {
             link: function (scope, elem, attr) {
                 var
                     nameNovalidate = 'novalidate',
-
                     nameSubmit = 'kkVldSubmit',
-
                     nameSuccess = 'kkVldSubmitSuccess',
-
                     nameError = 'kkVldSubmitError',
-
                     form = elem.controller('form'),
-
                     fnSubmit = $parse(attr[nameSubmit]),
-
                     fnSuccess = $parse(attr[nameSuccess]),
-
                     fnError = $parse(attr[nameError]);
 
                 form.$submitted = false;
@@ -456,19 +520,15 @@ angular.module('kk.angular-validator', [])
                 }
 
                 if (angular.isUndefined(attr.name) || attr.name === '') {
-                    form.$name = 'kk-validator-' + kkValidatorUtils.randomString(6, true, false, true);
+                    form.$name = 'kk-vld-' + kkVldUtils.randomString(6, true, false, true);
                     attr.$set('name', form.$name);
                 }
 
                 elem.bind('submit', function (event) {
-
                     event.preventDefault();
-
                     scope.$apply(function () {
-
                         fnSubmit(scope, { $event : event });
-
-                        kkValidatorService.validateForm(form).then(
+                        kkVldService.validateForm(form).then(
                             function () {
                                 fnSuccess(scope, { $event : event });
                             },
@@ -482,19 +542,36 @@ angular.module('kk.angular-validator', [])
         };
     }])
 
-	.directive("kkVldRequired", [ "$q", "kkValidatorService", function ($q, kkValidatorService) {
+	.directive("kkVldRequired", [ "$q", "kkVldService", function ($q, kkVldService) {
 
         // Return configured, directive instance
         return {
             require: 'ngModel',
             link: function (scope, elem, attr, ctrl) {
                 var name = 'kkVldRequired',
-                    defaultMessage = 'Field is required.',
+                    message = 'Field is required.',
                     isValid = function (value, isFormatter) {
+
+                        console.log(value, isFormatter);
                         var deferred = $q.defer();
-                        if (angular.isUndefined(value) && isFormatter) {
-                            deferred.reject();
-                        } else if (elem[0].type === 'checkbox' && value === false) {
+
+                        //console.log(elem.attr('name'), 'value: ', value, ' type: ', elem[0].type, ' checked: ', elem[0].checked, ' isFormatter: ', isFormatter);
+
+                        if (elem[0].type === 'radio') {
+                            kkVldService.pushRadioElement(name, message, elem, ctrl);
+                            if (elem[0].checked !== true) {
+                                deferred.reject();
+                            } else {
+                                kkVldService.enableRadioElements(elem);
+                                deferred.resolve();
+                            }
+                        } else if (elem[0].type === 'checkbox') {
+                            if (elem[0].checked !== true ) {
+                                deferred.reject();
+                            } else {
+                                deferred.resolve();
+                            }
+                        } else if (angular.isUndefined(value) && isFormatter) {
                             deferred.reject();
                         } else if (value !== '') {
                             deferred.resolve();
@@ -503,7 +580,132 @@ angular.module('kk.angular-validator', [])
                         }
                         return deferred.promise;
                     };
-                kkValidatorService.initialize(name, defaultMessage, elem, attr, ctrl, isValid);
+                kkVldService.initialize(name, message, elem, attr, ctrl, isValid);
             }
         };
-    }]);
+    }])
+
+    .directive("kkVldLengthMin", [ "$q", "kkVldService", function ($q, kkVldService) {
+        // Return configured, directive instance
+        return {
+            require: 'ngModel',
+            link: function (scope, elem, attr, ctrl) {
+                var name = 'kkVldLengthMin',
+                    minValue = parseInt(attr.kkVldMinValue, 10),
+                    message = 'Field length must be more than ' + minValue,
+                    isValid = function (value) {
+                        var deferred = $q.defer();
+                        if (angular.isUndefined(value) || value === '') {
+                            deferred.resolve();
+                        } else {
+                            if (value.length < minValue) {
+                                deferred.reject();
+                            } else {
+                                deferred.resolve();
+                            }
+                        }
+                        return deferred.promise;
+                    };
+                kkVldService.initialize(name, message, elem, attr, ctrl, isValid);
+            }
+        };
+    }])
+
+    .directive("kkVldLengthMax", [ "$q", "kkVldService", function ($q, kkVldService) {
+        // Return configured, directive instance
+        return {
+            require: 'ngModel',
+            link: function (scope, elem, attr, ctrl) {
+                var name = 'kkVldLengthMax',
+                    maxValue = parseInt(attr.kkVldMaxValue, 10),
+                    message = 'Field length must be less than ' + maxValue,
+                    isValid = function (value) {
+                        var deferred = $q.defer();
+                        if (angular.isUndefined(value) || value === '') {
+                            deferred.resolve();
+                        } else {
+                            if (value.length > maxValue) {
+                                deferred.reject();
+                            } else {
+                                deferred.resolve();
+                            }
+                        }
+                        return deferred.promise;
+                    };
+                kkVldService.initialize(name, message, elem, attr, ctrl, isValid);
+            }
+        };
+    }])
+
+    .directive("kkVldLengthRange", [ "$q", "kkVldService", function ($q, kkVldService) {
+        // Return configured, directive instance
+        return {
+            require: 'ngModel',
+            link: function (scope, elem, attr, ctrl) {
+                var name = 'kkVldLengthRange',
+                    minValue = parseInt(attr.kkVldMinValue, 10),
+                    maxValue = parseInt(attr.kkVldMaxValue, 10),
+                    message = 'Field length must be between ' + minValue + ' and ' + maxValue,
+                    isValid = function (value) {
+                        var deferred = $q.defer();
+                        console.log('is submitted', kkVldService.isFormSubmitted(elem));
+                        if (!kkVldService.isFormSubmitted(elem)) {
+                            deferred.resolve();
+                        }
+                        else if (angular.isUndefined(value) || value === '') {
+                            deferred.resolve();
+                        } else {
+                            if (value.length > maxValue || value.length < minValue) {
+                                deferred.reject();
+                            } else {
+                                deferred.resolve();
+                            }
+                        }
+                        return deferred.promise;
+                    };
+                kkVldService.initialize(name, message, elem, attr, ctrl, isValid);
+            }
+        };
+    }])
+
+    .directive('kkVldNumber', function () {
+        return {
+            require: 'ngModel',
+            link: function (scope, elem, attrs, ctrl) {
+
+                console.log('sssssssssssss');
+
+                console.log(ctrl);
+
+                // valid number
+                ctrl.$parsers.push(function (value) {
+
+                    console.log('$parsers', value);
+
+                    if(value === '') return value;
+                    return isFinite(value) ? Number(value) : undefined;
+                });
+
+                ctrl.$formatters.push(function (value) {
+
+                    console.log('$formatters', value);
+
+                    return value;
+                });
+
+                ctrl.$validators.kkVldMinNumber = function (value) {
+
+                    console.log('kkVldMinNumber', value);
+
+                    return !value || !angular.isDefined(attrs.kkVldMinNumber) || (value >= Number(attrs.kkVldMinNumber));
+                };
+
+                ctrl.$validators.kkVldMaxNumber = function (value) {
+
+                    console.log('kkVldMaxNumber', value);
+
+                    return !value || !angular.isDefined(attrs.kkVldMaxNumber) || (value <= Number(attrs.kkVldMaxNumber));
+                };
+            }
+        };
+    })
