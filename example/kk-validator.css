@@ -2,32 +2,19 @@
 .ng-submitted select.ng-invalid {
     border: 1px solid red;
 }
-
 section.ng-dirty.ng-invalid,
 .kk-submitted section.ng-invalid,
-input.ng-dirty.ng-invalid,
-.kk-submitted input.ng-invalid,
+input:not([type="radio"]):not([type="checkbox"]).ng-dirty.ng-invalid,
+.kk-submitted input:not([type="radio"]):not([type="checkbox"]).ng-invalid,
 select.ng-dirty.ng-invalid,
 .kk-submitted select.ng-invalid,
 textarea.ng-dirty.ng-invalid,
 .kk-submitted textarea.ng-invalid {
     border: 1px solid red !important;
 }
-input[type="checkbox"].ng-dirty.ng-invalid,
-.kk-submitted input[type="checkbox"].ng-invalid {
-    border: none;
-    box-shadow: 0 0 0 1px red !important;
-}
-input[type="radio"].ng-dirty.ng-invalid,
-.kk-submitted input[type="radio"].ng-invalid {
-    border: none;
-    box-shadow: 0 0 0 1px red !important;
-}
-
 .ng-submitted label.kk-vld-error {
     color: red;
 }
-
 .ng-submitted input:not([type="radio"]):not([type="checkbox"]).kk-vld-error,
 .ng-submitted select.kk-vld-error,
 .ng-submitted section.kk-vld-error {
@@ -36,7 +23,6 @@ input[type="radio"].ng-dirty.ng-invalid,
 .kk-vld-parent-error {
     border: 1px solid red;
 }
-
 .kk-vld-popover {
     opacity: 0;
     position: absolute;
@@ -55,14 +41,20 @@ input[type="radio"].ng-dirty.ng-invalid,
     -webkit-transition: opacity .5s; /* Safari 3.1 to 6.0 */
     transition: opacity .5s;
 }
-.ng-submitted .kk-vld-popover {
+.ng-submitted .kk-vld-popover,
+.ng-dirty + .kk-vld-popover {
     opacity: 1 !important;
 }
+
 .kk-vld-popover-content {
     padding: 6px 10px;
     color: white;
     font-size: 12px;
     line-height: 18px;
+}
+
+.kk-vld-popover-message {
+	display: block;
 }
 
 .kk-vld-popover-arrow,
@@ -73,6 +65,7 @@ input[type="radio"].ng-dirty.ng-invalid,
     height: 0;
     border: solid transparent;
 }
+
 .kk-vld-popover-arrow {
     left: 20px;
     bottom: -22px;
@@ -80,6 +73,7 @@ input[type="radio"].ng-dirty.ng-invalid,
     border-width: 11px;
     border-top-color: darkred;
 }
+
 .kk-vld-popover-arrow:after {
     border-width: 10px;
     content: " ";
@@ -87,4 +81,46 @@ input[type="radio"].ng-dirty.ng-invalid,
     margin-left: -10px;
     border-bottom-width: 0;
     border-top-color: red
+}
+
+
+.kk-vld-spinner {
+	position: absolute;
+	right: 0;
+	top: 0;
+	background-color: transparent;
+	border-radius: 150px;
+	display: inline-block;
+	width: 12px;
+	height: 12px;
+	border: 2px solid transparent;
+	border-right-color: rgba(0, 0, 0, .4);
+	border-bottom-color: rgba(0, 0, 0, .4);
+	vertical-align: middle;
+	-webkit-animation: spin .5s infinite linear;
+	-moz-animation: spin .5s infinite linear;
+	-ms-animation: spin .5s infinite linear;
+	-o-animation: spin .5s infinite linear;
+	animation: spin .5s infinite linear;
+}
+
+@-webkit-keyframes spin { /* Safari and Chrome */
+	0% { -webkit-transform: rotate(0deg); }
+	100% { -webkit-transform: rotate(360deg); }
+}
+@-moz-keyframes spin { /* Firefox */
+	0% { -moz-transform: rotate(0deg); }
+	100% { -moz-transform: rotate(360deg); }
+}
+@-ms-keyframes spin { /* IE */
+	0% { -ms-transform: rotate(0deg); }
+	100% { -ms-transform: rotate(360deg); }
+}
+@-o-keyframes spin { /* Opera */
+	0% { -o-transform: rotate(0deg); }
+	100% { -o-transform: rotate(360deg); }
+}
+@keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
 }

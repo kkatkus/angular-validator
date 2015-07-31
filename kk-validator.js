@@ -4,326 +4,600 @@
  * License: MIT
  */
 
-'use strict';
+(function() {
+	'use strict';
 
-angular.module('kk.validator', [])
-	
-	.service("kkVldService", [ "$q", "$timeout", "$compile", function ($q, $timeout, $compile) {
+	angular.module('kk.validator', [])
 
-        var /**
-             * @errors stores validation error messages
-             */
-            errors = {},
+		.service("kkVldService", [ "$q", "$timeout", "$compile", function ($q, $timeout, $compile) {
 
-            popovers = {},
+			var /**
+				 * @errors stores validation error messages
+				 */
+				errors = {},
 
-            hasOwnProperty = Object.prototype.hasOwnProperty,
+				/**
+				 * @popovers stores popover elements
+				 */
+				popovers = {},
 
-            isEmpty = function (obj) {
+				/**
+				 * @popovers stores popover elements
+				 */
+				popovers2 = {},
 
-                // null and undefined are "empty"
-                if (obj == null) return true;
+				/**
+				 * @popovers stores radios elements
+				 */
+				radios = {},
 
-                // Assume if it has a length property with a non-zero value
-                // that that property is correct.
-                if (obj.length > 0)    return false;
-                if (obj.length === 0)  return true;
+				/**
+				 * @hasOwnProperty helper
+				 */
+				hasOwnProperty = Object.prototype.hasOwnProperty,
 
-                // Otherwise, does it have any properties of its own?
-                // Note that this doesn't handle
-                // toString and valueOf enumeration bugs in IE < 9
-                for (var key in obj) {
-                    if (hasOwnProperty.call(obj, key)) return false;
-                }
+				/**
+				 * Util to check if object is empty = {}
+				 * @returns boolean
+				 */
+				isEmpty = function (obj) {
 
-                return true;
-            },
+					// null and undefined are "empty"
+					if (obj == null) return true;
 
-            /**
-             * Util to get generate random id
-             * @returns string
-             */
-            onGetRandomId = function () {
-                var text = "";
-                var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+					// Assume if it has a length property with a non-zero value
+					// that that property is correct.
+					if (obj.length > 0)    return false;
+					if (obj.length === 0)  return true;
 
-                for( var i=0; i < 5; i++ )
-                    text += possible.charAt(Math.floor(Math.random() * possible.length));
+					// Otherwise, does it have any properties of its own?
+					// Note that this doesn't handle
+					// toString and valueOf enumeration bugs in IE < 9
+					for (var key in obj) {
+						if (hasOwnProperty.call(obj, key)) return false;
+					}
 
-                return text;
-            },
+					return true;
+				},
 
-            /**
-             * Util to get form name from element
-             * @returns string
-             */
-            onGetFormNameFromElement = function (elem) {
-                return elem.controller('form') ? elem.controller('form').$name : undefined;
-            },
+				onGetOptions = function (scope, elementOptions, defaultOptions) {
+					var __hasProp = {}.hasOwnProperty,
+						option,
+						options = angular.copy(defaultOptions || {}),
+						value,
+						_ref;
 
-            /**
-             * Util to get form name form object of form name
-             * @returns string
-             */
-            onGetFormName = function (frm) {
-                return typeof frm === 'object' ? frm.$name : frm;
-            },
+					if (elementOptions != null) {
+						try {
+							_ref = scope.$eval(elementOptions);
+						} catch (e) {
+							console.error('Options must be json object but found:', elementOptions);
+							return;
+						}
 
-            /**
-             * Util to get form id or create random and return
-             * @returns string
-             */
-            onGetElementId = function (elem) {
-                var formName = onGetFormNameFromElement(elem);
+						for (option in _ref) {
+							if (!__hasProp.call(_ref, option)) continue;
+							value = _ref[option];
+							options[option] = value;
+						}
+					}
+					return options;
+				},
 
-                elem[0].id = elem[0].id || 'kk-vld-fld-' + onGetRandomId();
+				/**
+				 * Util to make validations
+				 * @returns function
+				 */
+				onMakeValidations = function (validations) {
+					return function (val) {
+						var i, _i, _ref;
+						if (angular.isUndefined(val) || val === '' || val === null) {
+							return true;
+						}
+						for (i = _i = 0, _ref = validations.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+							if (!validations[i](val)) {
+								return false;
+							}
+						}
+						return true;
+					};
+				},
 
-                errors[formName] = errors[formName] || {};
-                errors[formName][elem[0].id] = errors[formName][elem[0].id] || {};
+				/**
+				 * Util to check if element is checkbox
+				 * @returns boolean
+				 */
+				onIsElementCheckbox = function (elem) {
+					return elem[0].type === 'checkbox';
+				},
 
-                popovers[formName] = popovers[formName] || {};
-                popovers[formName][elem[0].id] = popovers[formName][elem[0].id] || undefined;
+				/**
+				 * Util to check if element is radio
+				 * @returns boolean
+				 */
+				onIsElementRadio = function (elem) {
+					return elem[0].type === 'radio';
+				},
 
-                return elem[0].id;
-            },
+				/**
+				 * Util to get generate random id
+				 * @returns string
+				 */
+				onGetRandomId = function () {
+					var text = "";
+					var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-            onMarkPopover = function (elem) {
-                popovers[onGetFormNameFromElement(elem)][elem[0].id] = true;
-            },
+					for( var i=0; i < 5; i++ )
+						text += possible.charAt(Math.floor(Math.random() * possible.length));
 
-            onIsPopover = function (elem) {
-                return popovers[onGetFormNameFromElement(elem)][elem[0].id] === true;
-            },
+					return text;
+				},
 
-            onAddElementError = function (errorId, errorMessage, scope, elem) {
-                var id = onGetElementId(elem),
-                    formName = onGetFormNameFromElement(elem);
-                errors[formName][id][errorId] = errorMessage;
-                onSyncPopover(scope, elem);
-            },
+				/**
+				 * Util to get form name from element
+				 * @returns string
+				 */
+				onGetFormNameFromElement = function (elem) {
+					return elem.controller('form') ? elem.controller('form').$name : undefined;
+				},
 
-            onRemoveElementError = function (errorId, scope, elem) {
-                var id = onGetElementId(elem),
-                    formName = onGetFormNameFromElement(elem);
-                if (errors[formName] && errors[formName][id] && errors[formName][id][errorId]) {
-                    delete errors[formName][id][errorId];
-                }
-                onSyncPopover(scope, elem);
-            },
+				/**
+				 * Util to get form name form object of form name
+				 * @returns string
+				 */
+				onGetFormName = function (frm) {
+					return typeof frm === 'object' ? frm.$name : frm;
+				},
 
-            onGetElementErrors = function (elem) {
-                return errors[onGetFormNameFromElement(elem)][onGetElementId(elem)];
-            },
+				/**
+				 * Util to get form id or create random and return
+				 * @returns string
+				 */
+				onGetElementId = function (elem) {
+					var formName = onGetFormNameFromElement(elem);
 
-            onProcess = function(errorId, result, errorMessage, scope, elem) {
-                if (result) {
-                    onRemoveElementError(errorId, scope, elem);
-                } else {
-                    onAddElementError(errorId, errorMessage, scope, elem);
-                }
-            },
+					elem[0].id = elem[0].id || 'kk-vld-fld-' + onGetRandomId();
 
-            onSyncPopover = function (scope, elem) {
+					errors[formName] = errors[formName] || {};
+					errors[formName][elem[0].id] = errors[formName][elem[0].id] || {};
 
-                var isPopover = onIsPopover(elem),
-                    popover,
+					popovers[formName] = popovers[formName] || {};
+					popovers[formName][elem[0].id] = popovers[formName][elem[0].id] || undefined;
 
-                    createPopover = function () {
+					popovers2[formName] = popovers2[formName] || {};
 
-                        //delete popover if exists
-                        destroyPopover();
+					radios[formName] = radios[formName] || {};
+					if (elem[0].name) {
+						radios[formName][elem[0].name] = radios[formName][elem[0].name] || [];
+					}
 
-                        var errors = onGetElementErrors(elem);
+					return elem[0].id;
+				},
 
-                        if (!isEmpty(errors)) {
+				/**
+				 * Util to store popover in bind list
+				 */
+				onAddPopoverToBindList = function (elem) {
+					popovers[onGetFormNameFromElement(elem)][elem[0].id] = true;
+				},
 
-                            var positionLeft = elem.prop('offsetLeft'),
-                                positionTop = elem.prop('offsetTop'),
-                                popoverTpl = '<div class="kk-vld-popover">' +
-                                    '<div class="kk-vld-popover-arrow"></div>' +
-                                    '<div class="kk-vld-popover-content">{{messages}}</div>' +
-                                    '</div>',
-                                messages = '';
+				/**
+				 * Util to check if popover exist in bind list
+				 * @returns boolean
+				 */
+				onIsPopoverInBindList = function (elem) {
+					return popovers[onGetFormNameFromElement(elem)] && popovers[onGetFormNameFromElement(elem)][elem[0].id] === true;
+				},
 
-                            popover = angular.copy(popoverTpl),
+				/**
+				 * Util to add spinner to element when async validation starts
+				 */
+				onAddAsyncSpinner = function (elem) {
+					elem.parent().append('<i class="kk-vld-spinner"></i>');
+				},
 
-                            angular.forEach(errors, function (error) {
-                                messages = messages + '<span class="kk-vld-popover-message">' + error +'</span>';
-                            });
+				/**
+				 * Util to remove spinner from element when async validation stops
+				 */
+				onRemoveAsyncSpinner = function (elem) {
+					angular.forEach(elem.parent().children(), function (i){
+						var el = angular.element(i);
+						if (el.hasClass('kk-vld-spinner')) {
+							el.remove();
+						}
+					});
+				},
 
-                            popover = popover.replace('{{messages}}', messages);
-                            popover = angular.element(popover);
+				/**
+				 * Util to add validation message and create popover
+				 */
+				onAddElementError = function (errorId, errorMessage, scope, elem, recursive) {
 
-                            elem.after(popover);
-                            $compile(popover)(scope);
+					var id = onGetElementId(elem),
+						formName = onGetFormNameFromElement(elem);
+					errors[formName][id][errorId] = errorMessage;
 
-                            popover.css('bottom', popover[0].offsetHeight - positionTop + 22 + 'px');
-                            popover.css('left', positionLeft + 'px');
-                        }
-                    },
+					elem.parent().addClass('kk-vld-error');
 
-                    destroyPopover = function () {
-                        if (popover) {
-                            //elem.parent().removeClass('kk-vld-error');
-                            popover.remove();
-                        }
-                    },
+					if (onIsElementRadio(elem)) {
+						if (radios[formName][elem[0].name].indexOf(elem) === -1) {
+							radios[formName][elem[0].name].push(elem);
+						}
+					}
+				},
 
-                    changePopover = function () {
-                        if (isEmpty(onGetElementErrors(elem))) {
-                            destroyPopover(event);
-                        } else {
-                            createPopover(event);
-                        }
-                    };
+				/**
+				 * Util to remove validation error and destroy popover
+				 * @returns boolean
+				 */
+				onRemoveElementError = function (errorId, scope, elem) {
 
-                if (!isPopover) {
-                    onMarkPopover(elem);
-                    elem.bind('mouseover', createPopover)
-                        .bind('mouseleave', destroyPopover)
-                        .bind('keyup', changePopover);
+					var id = onGetElementId(elem),
+						formName = onGetFormNameFromElement(elem);
+					if (errors[formName] && errors[formName][id] && errors[formName][id][errorId]) {
+						delete errors[formName][id][errorId];
+						if (isEmpty(errors[formName][id])) {
+							elem.parent().removeClass('kk-vld-error');
+						}
+					}
 
-                    elem.parent().addClass('kk-vld-error');
-                }
-            },
+					onDestroyPopover();
+				},
 
-            /**
-             * Util to clear form/all error messages
-             */
-            onResetForm = function (form) {
+				/**
+				 * Util to get element validation errors
+				 * @returns array
+				 */
+				onGetElementErrors = function (elem) {
+					return errors[onGetFormNameFromElement(elem)][onGetElementId(elem)];
+				},
 
-                if (form) {
-                    form.$setPristine();
-                    form.$setUntouched();
-                }
+				onDestroyPopover = function () {
+					var popover = document.getElementsByClassName('kk-vld-popover');
+					if (popover.length > 0) {
+						popover[0].parentNode.removeChild(popover[0]);
+					}
+				},
 
-                // hack: modelValue is undefined if validators fail
-                for (var prop in form) {
-                    if (form.hasOwnProperty(prop) && prop.indexOf('$') < 0) {
-                        if (form[prop].$modelValue !== form[prop].$viewValue) {
-                            form[prop].$modelValue = null;
-                        }
-                    }
-                }
+				onCreatePopover = function (scope, elem) {
 
-                // after reset form, re validate all form elements
-                $timeout(function () {
-                    for (var prop in form) {
-                        if (form.hasOwnProperty(prop) && prop.indexOf('$') < 0) {
-                            form[prop].$validate();
-                        }
-                    }
-                });
-            },
+					var popover,
+						errors = onGetElementErrors(elem);
 
-            /**
-             * Util to get form error messages
-             * @returns array
-             */
-            onGetFormErrors = function (frm) {
-                return frm ? errors[onGetFormName(frm)] : errors;
-            };
+					//delete popover if exists
+					onDestroyPopover();
 
-        // Publish delegate instance/object with desired API
-        return {
-            process: onProcess,
-            addElementError: onAddElementError,
-            removeElementError: onRemoveElementError,
-            getElementErrors: onGetElementErrors,
+					if (!isEmpty(errors)) {
 
-            getFormErrors: onGetFormErrors,
-            resetForm: onResetForm
-        };
-    }])
+						var pl = elem.prop('offsetLeft'),
+							pt = elem.prop('offsetTop'),
+							tpl = '<div class="kk-vld-popover">' +
+								'<div class="kk-vld-popover-arrow"></div>' +
+								'<div class="kk-vld-popover-content">{{messages}}</div>' +
+								'</div>',
+							messages = '';
+						popover = angular.copy(tpl),
+							angular.forEach(errors, function (error) {
+								messages = messages + '<span class="kk-vld-popover-message">' + error +'</span>';
+							});
 
-    .directive('kkVldRequired', [ "kkVldService", function (kkVldService) {
-        return {
-            require: 'ngModel',
-            link: function (scope, elem, attrs, ctrl) {
+						popover = popover.replace('{{messages}}', messages);
+						popover = angular.element(popover);
 
-                var errorMessage = attrs.kkVldRequired || 'Field is required',
-                    isCheckbox = function () {
-                        return elem[0].type === 'checkbox';
-                    };
+						elem.after(popover);
+						$compile(popover)(scope);
 
-                ctrl.$validators.kkVldRequired = function (value) {
-                    var result = angular.isDefined(value) && value !== '' || isCheckbox(elem) && elem[0].checked === true;
-                    kkVldService.process("kkVldRequired", result, errorMessage, scope, elem);
-                    return result;
-                };
-            }
-        };
-    }])
+						popover.css('bottom', popover[0].offsetHeight - pt + 22 + 'px');
+						popover.css('left', pl + 'px');
+					}
+				},
 
-    .directive('kkVldString', [ "kkVldService", function (kkVldService) {
+				onProcess = function(errorId, isValid, errorMessage, scope, elem) {
 
-        var __hasProp = {}.hasOwnProperty,
-            defaultOptions = {},
-            getOptions = function (scope) {
-                var option, options, value, _ref;
-                options = angular.copy(defaultOptions);
-                if (scope.options != null) {
-                    _ref = scope.$eval(scope.options);
-                    for (option in _ref) {
-                        if (!__hasProp.call(_ref, option)) continue;
-                        value = _ref[option];
-                        options[option] = value;
-                    }
-                }
-                return options;
-            },
-            makeMax = function(max) {
-                return function(str) {
-                    return str.length <= max;
-                };
-            },
-            makeMin = function(min) {
-                return function(str) {
-                    return str.length >= min;
-                };
-            },
-            makeIsValid = function (options) {
-                var validations;
-                validations = [];
+					if (isValid) {
+						onRemoveElementError(errorId, scope, elem);
+					} else {
+						onAddElementError(errorId, errorMessage, scope, elem);
+					}
 
-                if (options.min != null) {
-                    validations.push(makeMin(options.min));
-                }
-                if (options.max != null) {
-                    validations.push(makeMax(options.max));
-                }
+					// sync other radio buttons
+					if (onIsElementRadio(elem)) {
+						var formName = onGetFormNameFromElement(elem);
+						angular.forEach(radios[formName][elem[0].name], function (e) {
+							//if (id !== onGetElementId(e)) {
+								$timeout(function () {
+									if (isValid) {
+										onRemoveElementError(errorId, scope, e);
+										onResetProp(formName, e);
+									} else {
+										onAddElementError(errorId, errorMessage, scope, e);
+										onResetProp(formName, e);
+									}
+								}, 0);
+							//}
+						});
+					}
 
-                return function(val) {
-                    var i, _i, _ref;
-                    if (angular.isUndefined(val) || val === '' || val === null) {
-                        return true;
-                    }
-                    for (i = _i = 0, _ref = validations.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
-                        if (!validations[i](val)) {
-                            return false;
-                        }
-                    }
-                    return true;
-                };
-            }
+					// bind mouse events
+					if (!onIsPopoverInBindList(elem)) {
+						onAddPopoverToBindList(elem);
 
-        return {
-            require: 'ngModel',
-            scope: {
-                options: '@kkVldString'
-            },
-            link: function (scope, elem, attrs, ctrl) {
+						if (onIsElementCheckbox(elem) || onIsElementRadio(elem)) {
+							elem.parent()
+								.bind('mouseover click', function () {
+									onCreatePopover(scope, elem);
+								})
+								.bind('mouseleave', onDestroyPopover)
+						} else {
+							elem.bind('mouseover keyup', function () {
+									onCreatePopover(scope, elem);
+								})
+								.bind('mouseleave', onDestroyPopover)
+						}
+					}
+				},
 
-                var options = getOptions(scope),
-                    isValid = makeIsValid(options),
-                    errorMessage = options.message || 'String is invalid' ;
+				/**
+				 * Util to reset element in given form
+				 */
+				onResetProp = function (form, prop) {
 
-                ctrl.$validators.kkVldString = function (value) {
-                    var result = isValid(value);
-                    kkVldService.process("kkVldString", result, errorMessage, scope, elem);
-                    return result;
-                };
-            }
-        };
-    }]);
+					// hack: modelValue is undefined if validators fail
+					if (form.hasOwnProperty(prop) && prop.indexOf('$') < 0) {
+						if (form[prop].$modelValue !== form[prop].$viewValue) {
+							form[prop].$modelValue = null;
+						}
+					}
 
+					// after reset form, re validate all form elements
+					$timeout(function () {
+						if (form.hasOwnProperty(prop) && prop.indexOf('$') < 0) {
+							form[prop].$validate();
+						}
+					});
+				},
+
+				/**
+				 * Util to clear form/all error messages
+				 */
+				onResetForm = function (form) {
+
+					// bring back form in initial state
+					if (form) {
+						form.$setPristine();
+						form.$setUntouched();
+					}
+
+					// reset all elements in given form
+					for (var prop in form) {
+						onResetProp(form, prop);
+					}
+				},
+
+				/**
+				 * Util to get form error messages
+				 * @returns array
+				 */
+				onGetFormErrors = function (frm) {
+					return frm ? errors[onGetFormName(frm)] : errors;
+				};
+
+			// Publish delegate instance/object with desired API
+			return {
+				process: onProcess,
+				getOptions: onGetOptions,
+				makeValidations: onMakeValidations,
+				isElementCheckbox: onIsElementCheckbox,
+				isElementRadio: onIsElementRadio,
+				addElementError: onAddElementError,
+				removeElementError: onRemoveElementError,
+				getElementErrors: onGetElementErrors,
+				getFormErrors: onGetFormErrors,
+				resetForm: onResetForm,
+
+				addAsyncSpinner: onAddAsyncSpinner,
+				removeAsyncSpinner: onRemoveAsyncSpinner
+			};
+		}])
+
+		.directive('kkVldRequired', [ "kkVldService", function (kkVldService) {
+			return {
+				require: 'ngModel',
+				scope: false,
+				link: function (scope, elem, attrs, ctrl) {
+
+					var options = kkVldService.getOptions(scope, attrs.kkVldRequired, {}),
+						errorMessage = options.message || 'Field is invalid' ;
+
+					ctrl.$validators.kkVldRequired = function (value) {
+
+						var result = false;
+
+						if (kkVldService.isElementCheckbox(elem)) {
+							result = elem[0].checked === true;
+						} else if (kkVldService.isElementRadio(elem)) {
+							if (elem[0].name) {
+								var radios = document.getElementsByName(elem[0].name),
+									i;
+								for (i = 0; i < radios.length; i = i + 1) {
+									if (radios[i].checked === true) {
+										result = true;
+									}
+								}
+							} else {
+								console.error('Radio Inputs must have "name" attribute!!');
+							}
+						} else {
+							result = angular.isDefined(value) && value !== '';
+						}
+
+						kkVldService.process("kkVldRequired", result, errorMessage, scope, elem);
+						return result;
+					};
+				}
+			};
+		}])
+
+		.directive('kkVldString', [ "kkVldService", function (kkVldService) {
+
+			var makeMax = function(max) {
+					return function(str) {
+						return str.length <= max;
+					};
+				},
+				makeMin = function(min) {
+					return function(str) {
+						return str.length >= min;
+					};
+				},
+				makeIsValid = function (options) {
+					var validations;
+					validations = [];
+					if (options.min != null) {
+						validations.push(makeMin(options.min));
+					}
+					if (options.max != null) {
+						validations.push(makeMax(options.max));
+					}
+					return kkVldService.makeValidations(validations);
+				};
+
+			return {
+				require: 'ngModel',
+				scope: false,
+				link: function (scope, elem, attrs, ctrl) {
+
+					var options = kkVldService.getOptions(scope, attrs.kkVldString, {}),
+						isValid = makeIsValid(options),
+						errorMessage = options.message || 'String is invalid' ;
+
+					ctrl.$validators.kkVldString = function (value) {
+						var result = isValid(value);
+						kkVldService.process("kkVldString", result, errorMessage, scope, elem);
+						return result;
+					};
+				}
+			};
+		}])
+
+		.directive('kkVldNumber', [ "kkVldService", function (kkVldService) {
+
+			var makeMax = function(max) {
+					return function(num) {
+						return parseInt(num, 10) <= max;
+					};
+				},
+				makeMin = function(min) {
+					return function(num) {
+						return parseInt(num) >= min;
+					};
+				},
+				makeIsValid = function (options) {
+					var validations;
+					validations = [];
+
+					if (options.min != null) {
+						validations.push(makeMin(options.min));
+					}
+					if (options.max != null) {
+						validations.push(makeMax(options.max));
+					}
+
+					return kkVldService.makeValidations(validations);
+				};
+
+			return {
+				require: 'ngModel',
+				scope: false,
+				link: function (scope, elem, attrs, ctrl) {
+
+					var options = kkVldService.getOptions(scope, attrs.kkVldNumber, {}),
+						isValid = makeIsValid(options),
+						errorMessage = options.message || 'Number is invalid' ;
+
+					ctrl.$validators.kkVldNumber = function (value) {
+						var result = isValid(value);
+						kkVldService.process("kkVldNumber", result, errorMessage, scope, elem);
+						return result;
+					};
+				}
+			};
+		}])
+
+		.directive('kkVldEmail', [ "kkVldService", function (kkVldService) {
+			return {
+				require: 'ngModel',
+				scope: false,
+				link: function (scope, elem, attrs, ctrl) {
+					var options = kkVldService.getOptions(scope, attrs.kkVldEmail, {}),
+						errorMessage = options.message || 'Field is invalid' ;
+
+					ctrl.$validators.kkVldEmail = function (value) {
+						var emailRegExp = /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i,
+							result = true;
+
+						if (angular.isDefined(value) && value !== '') {
+							result = emailRegExp.test(value);
+						}
+
+						kkVldService.process("kkVldEmail", result, errorMessage, scope, elem);
+						return result;
+					};
+				}
+			};
+		}])
+
+		.directive('kkVldCustom', [ "$q", "kkVldService", function ($q, kkVldService) {
+			return {
+				require: 'ngModel',
+				scope: false,
+				link: function (scope, elem, attrs, ctrl) {
+
+					var options = kkVldService.getOptions(scope, attrs.kkVldCustom, {}),
+						errorMessage = options.message || 'Field is invalid';
+
+					if (options.async) {
+						ctrl.$asyncValidators.kkVldCustom = function(value) {
+
+							var deferred = $q.defer();
+
+							if (angular.isUndefined(value) || value === '') {
+								kkVldService.process("kkVldCustom", true, errorMessage, scope, elem);
+								deferred.resolve();
+							} else {
+								kkVldService.addAsyncSpinner(elem);
+
+								scope[options.fn].call(this, value)
+									.then(
+									function () {
+										kkVldService.process("kkVldCustom", true, errorMessage, scope, elem);
+										kkVldService.removeAsyncSpinner(elem);
+										deferred.resolve();
+									},
+									function (msg) {
+										kkVldService.process("kkVldCustom", false, msg || errorMessage, scope, elem);
+										kkVldService.removeAsyncSpinner(elem);
+										return deferred.reject();
+									}
+								);
+							}
+
+							return deferred.promise;
+						};
+					} else {
+						ctrl.$validators.kkVldCustom = function (value) {
+
+							if (angular.isUndefined(value) || value === '') {
+								return true;
+							}
+
+							var result = scope[options.fn].call(this, value);
+							kkVldService.process("kkVldCustom", result, errorMessage, scope, elem);
+							return result;
+						};
+					}
+				}
+			};
+		}]);
+
+})();

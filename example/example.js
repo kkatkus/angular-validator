@@ -1,101 +1,126 @@
-angular.module('ExampleApp', ['kk.validator'])
+(function() {
+	'use strict';
 
-    .controller('MainCtrl', function ($scope, kkVldService) {
+	angular.module('ExampleApp', ['kk.validator'])
 
-        var onVldSubmit = function () {
+		.controller('MainCtrl', ["$scope", "$q", "$timeout", "kkVldService", function ($scope, $q, $timeout, kkVldService) {
 
-                console.log('onVldSubmit');
+			var onVldSubmit = function () {
 
-                $scope.alert = undefined;
-            },
+					console.log('onVldSubmit');
 
-            onVldError = function () {
+					$scope.alert = undefined;
+				},
 
-                console.log('onVldError');
+				onVldError = function () {
+					console.log('onVldError');
+					$scope.errors = kkVldService.getFormErrors($scope.kkValidatorForm);
+					$scope.alert = {
+						type: 'danger',
+						message: 'Form is Invalid.'
+					};
+				},
 
-                $scope.errors = kkVldService.getErrors($scope.kkValidatorForm.$name);
+				onVldSuccess = function () {
+					console.log('onVldSuccess');
+					$scope.alert = {
+						type: 'success',
+						message: 'Form is Valid.'
+					};
+				},
 
-                $scope.alert = {
-                    type: 'danger',
-                    message: 'Form is Invalid.'
-                };
-            },
+				onReset = function (form) {
+					kkVldService.resetForm(form);
+					onInitialize();
+				},
 
-            onVldSuccess = function () {
+				onVldSubmit2 = function (data) {
+					console.log('onVldSubmit', data);
+					$scope.alert2 = undefined;
+				},
+				onVldSuccess2 = function (data) {
+					console.log('onVldSuccess', data);
+					$scope.alert2 = {
+						type: 'success',
+						message: 'Form is Valid.'
+					};
+				},
+				onVldError2 = function (data) {
+					console.log('onVldError', data);
+					$scope.alert2 = {
+						type: 'danger',
+						message: 'Form is Invalid.'
+					};
+				},
 
-                console.log('onVldSuccess');
+				onInitialize = function () {
+					$scope.alert = undefined;
+					$scope.data = {
+						required: {
+							input: undefined,
+							select: undefined,
+							datalist: undefined,
+							keygen: undefined,
+							checkbox: undefined,
+							radio: undefined
+						},
+						number: 'z',
+						ranges: {
+							min: '1',
+							max: '123456',
+							range: '1234'
+						},
+						email: 'any',
+						custom1: 'a',
+						custom2: 'b'
+					};
+					$scope.data2 = {
+						required: {
+							input: undefined
+						}
+					};
 
-                $scope.alert = {
-                    type: 'success',
-                    message: 'Form is Valid.'
-                };
-            },
+					$scope.data3 = {
 
-            onReset = function (form) {
-                kkVldService.resetForm(form);
-                onInitialize();
-            },
+					};
 
-            onVldSubmit2 = function (data) {
-                console.log('onVldSubmit', data);
-                $scope.alert2 = undefined;
-            },
-            onVldSuccess2 = function (data) {
-                console.log('onVldSuccess', data);
-                $scope.alert2 = {
-                    type: 'success',
-                    message: 'Form is Valid.'
-                };
-            },
-            onVldError2 = function (data) {
-                console.log('onVldError', data);
-                $scope.alert2 = {
-                    type: 'danger',
-                    message: 'Form is Invalid.'
-                };
-            },
+					$scope.dynamicForm = [
+						{ label: "First Name", name: "firstName" },
+						{ label: "Last Name", name: "lastName" }
+					]
 
-            onInitialize = function () {
-                $scope.alert = undefined;
-                $scope.data = {
-                    required: {
-                        input: undefined,
-                        select: undefined,
-                        checkbox: undefined,
-                        radio: undefined
-                    },
-                    number: 'z',
-                    ranges: {
-                        min: '1',
-                        max: '123456',
-                        range: '1234'
-                    }
-                };
-                $scope.data2 = {
-                    required: {
-                        input: undefined
-                    }
-                };
+				},
 
-                $scope.data2 = {
+				onCustomValidateFn1 = function (value) {
+					console.log(value, arguments);
+					return value === 'x';
+				},
 
-                };
+				onCustomValidateFn2 = function (value) {
+					var defer = $q.defer();
+					$timeout(function () {
+						if (value === 'y') {
+							defer.resolve();
+						} else {
+							defer.reject('Custom validation message');
+						}
+					}, 1000);
+					return defer.promise;
+				};
 
-                $scope.dynamicForm = [
-                    { label: "First Name", name: "firstName" },
-                    { label: "Last Name", name: "lastName" }
-                ]
+			$scope.customValidateFn1 = onCustomValidateFn1;
+			$scope.customValidateFn2 = onCustomValidateFn2;
 
-            };
+			$scope.vldSubmit = onVldSubmit;
+			$scope.vldSuccess = onVldSuccess;
+			$scope.vldError = onVldError;
+			$scope.reset = onReset;
 
-        $scope.vldSubmit = onVldSubmit;
-        $scope.vldSuccess = onVldSuccess;
-        $scope.vldError = onVldError;
-        $scope.reset = onReset;
+			$scope.vldSubmit2 = onVldSubmit2;
+			$scope.vldSuccess2 = onVldSuccess2;
+			$scope.vldError2 = onVldError2;
 
-        $scope.vldSubmit2 = onVldSubmit2;
-        $scope.vldSuccess2 = onVldSuccess2;
-        $scope.vldError2 = onVldError2;
+			onInitialize();
+		}]);
 
-        onInitialize();
-    });
+})();

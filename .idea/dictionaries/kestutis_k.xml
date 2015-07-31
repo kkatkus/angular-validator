@@ -2,6 +2,9 @@
   <dictionary name="kestutis_k">
     <words>
       <w>attrs</w>
+      <w>datalist</w>
+      <w>debounce</w>
+      <w>keygen</w>
     </words>
   </dictionary>
 </component>

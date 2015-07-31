@@ -43,13 +43,13 @@
                             <div class="col-sm-4">
                                 <input type="text" class="form-control" placeholder="required field" id="bibi"
                                        ng-model="data.required.input"
-                                       kk-vld-required="Field is required"
+                                       kk-vld-required="{message: 'Field is required'}"
                                 />
                             </div>
                             <div class="col-sm-4">
                                 <select class="form-control"
                                         ng-model="data.required.select"
-                                        kk-vld-required="Field is required"
+                                        kk-vld-required="{message: 'Field is required'}"
                                 >
                                     <option value="">Please choose</option>
                                     <option value="1">Value 1</option>
@@ -59,11 +59,30 @@
                         </div>
 
                         <div class="form-group">
+                            <label class="col-sm-3"></label>
+                            <div class="col-sm-4">
+                                <input class="form-control" list="browsers"
+                                       ng-model="data.required.datalist"
+                                       kk-vld-required="{message: 'Field is required'}"
+                                >
+                                <datalist id="browsers">
+                                    <option value="Internet Explorer">
+                                    <option value="Firefox">
+                                    <option value="Chrome">
+                                    <option value="Opera">
+                                    <option value="Safari">
+                                </datalist>
+                            </div>
+                            <div class="col-sm-4">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
                             <div class="col-sm-offset-3 col-sm-9">
                                 <label>
                                     <input type="checkbox"
                                            ng-model="data.required.checkbox"
-                                           kk-vld-required="Field is required"
+                                           kk-vld-required="{message: 'Field is required'}"
                                     />
                                     Agree to the Policy
                                 </label>
@@ -73,18 +92,32 @@
                         <div class="form-group">
                             <div class="col-sm-offset-3 col-sm-9">
                                 <label>
-                                    <input type="radio" name="yesNo" value="yes"
+                                    <input type="radio" name="yesNo" value="1"
                                            ng-model="data.required.radio"
-                                           kk-vld-required="Field is required"
+                                           kk-vld-required="{message: 'Field is required'}"
                                     />
-                                    Yes
+                                    Answer 1
                                 </label>
                                 <label>
-                                    <input type="radio" name="yesNo" value="no"
+                                    <input type="radio" name="yesNo" value="2"
                                            ng-model="data.required.radio"
-                                           kk-vld-required="Field is required"
+                                           kk-vld-required="{message: 'Field is required'}"
                                     />
-                                    No
+                                    Answer 2
+                                </label>
+                                <label>
+                                    <input type="radio" name="yesNo" value="3"
+                                           ng-model="data.required.radio"
+                                           kk-vld-required="{message: 'Field is required'}"
+                                    />
+                                    Answer 3
+                                </label>
+                                <label>
+                                    <input type="radio" name="yesNo" value="4"
+                                           ng-model="data.required.radio"
+                                           kk-vld-required="{message: 'Field is required'}"
+                                            />
+                                    Answer 4
                                 </label>
                             </div>
                         </div>
@@ -123,6 +156,32 @@
                                 />
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label class="col-sm-3">Email</label>
+                            <div class="col-sm-9">
+                                <input class="form-control" type="text" placeholder="should be email"
+                                       ng-model="data.email"
+                                       kk-vld-email="{message: 'Email format invalid'}"
+                                        />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3">Custom</label>
+                            <div class="col-sm-4">
+                                <input class="form-control kk-vld-busy" type="text" placeholder="should be x"
+                                       ng-model="data.custom1"
+                                       kk-vld-custom="{message: 'should be x', fn: 'customValidateFn1' }"
+                                       kk-vld-required="{message: 'required biatch'}"
+                                        />
+                            </div>
+                            <div class="col-sm-4">
+                                <input class="form-control" type="text" placeholder="should be y"
+                                       ng-model-options="{ debounce: 1000 }"
+                                       ng-model="data.custom2"
+                                       kk-vld-custom="{message: 'should be y', fn: 'customValidateFn2', async: true}"
+                                        />
+                            </div>
+                        </div>
                     </div>
 
                     <div class="panel-footer">
@@ -146,7 +205,7 @@
 
                 <div class="panel panel-default">
 
-                    <div class="panel-heading">Multiple Forms</div>
+                    <div class="panel-heading">Another Form</div>
 
                     <div class="panel-body">
 
@@ -155,7 +214,7 @@
                             <div class="col-sm-9">
                                 <input class="form-control" type="text" placeholder="required field"
                                        ng-model="data2.required.input"
-                                       kk-vld-required="Field is required"
+                                       kk-vld-required="{message: 'Field is required'}"
                                 />
                             </div>
                         </div>
@@ -188,7 +247,7 @@
                             <div class="col-sm-9">
                                 <input class="form-control" type="text" placeholder="required field"
                                        ng-model="data3[item.name]"
-                                       kk-vld-required="Field is required"
+                                       kk-vld-required="{message: 'Field is required'}"
                                     />
                             </div>
                         </div>
