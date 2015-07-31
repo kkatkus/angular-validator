@@ -92,7 +92,6 @@
 				},
 
 				onCustomValidateFn1 = function (value) {
-					console.log(value, arguments);
 					return value === 'x';
 				},
 

@@ -588,6 +588,7 @@
 						ctrl.$validators.kkVldCustom = function (value) {
 
 							if (angular.isUndefined(value) || value === '') {
+								kkVldService.process("kkVldCustom", true, errorMessage, scope, elem);
 								return true;
 							}
 
